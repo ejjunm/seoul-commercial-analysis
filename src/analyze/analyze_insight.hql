@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS seoul_commercial
-LOCATION '/user/maria_dev/seoul-commercial-analysis/warehouse';
+CREATE DATABASE IF NOT EXISTS seoul_commercial;
 
 USE seoul_commercial;
 
