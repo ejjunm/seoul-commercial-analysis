@@ -17,7 +17,7 @@ setup:
 		$(CONDA) create -p $(ENV_DIR) python=3.7 -y; \
 	fi
 	@echo "=== [2/4] Installing dependencies ==="
-	$(PIP) install pyproj pandas
+	$(PIP) install pyproj pandas requests
 
 ingest:
 	@echo "=== [3/4] Running Data Ingestion ==="
@@ -30,6 +30,7 @@ preprocess:
 pipeline: ingest preprocess
 
 sample:
+	@echo "=== [5/5] Extracting Samples ==="
 	cd $(INGEST) && $(PYTHON) make_sample.py
 
 hdfs-ls:
