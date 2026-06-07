@@ -222,3 +222,12 @@ data/raw/
 
 data/sample/
 *.csv
+
+data/processed/
+data/geo/
+/tmp/seoul-commercial-analysis/
+
+__pycache__/
+*.pyc
+
+*.png
