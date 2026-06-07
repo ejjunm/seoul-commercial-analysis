@@ -1,5 +1,8 @@
 import os
 import subprocess
+import cloudpickle
+sys.modules['pyspark.cloudpickle'] = cloudpickle
+import subprocess
 import pandas as pd
 from pyproj import Transformer
 from pyspark.sql import SparkSession

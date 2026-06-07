@@ -1,12 +1,16 @@
 PYTHON  := /home/maria_dev/anaconda3/bin/python
+PIP      := /home/maria_dev/anaconda3/bin/pip
 SPARK    := PYSPARK_PYTHON=/home/maria_dev/anaconda3/bin/python PYSPARK_DRIVER_PYTHON=/home/maria_dev/anaconda3/bin/python spark-submit
 INGEST   := src/ingest
 PIPELINE := src/pipeline
 HDFS     := /user/maria_dev/seoul-commercial-analysis
 
-.PHONY: all ingest preprocess pipeline sample hdfs-ls clean
+.PHONY: all setup ingest preprocess pipeline sample hdfs-ls clean
 
-all: pipeline sample
+all: setup pipeline sample
+
+setup:
+	$(PIP) install pyproj cloudpickle
 
 ingest:
 	cd $(INGEST) && $(PYTHON) collect.py
