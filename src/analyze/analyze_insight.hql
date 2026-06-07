@@ -1,7 +1,3 @@
-CREATE DATABASE IF NOT EXISTS seoul_commercial;
-
-USE seoul_commercial;
-
 DROP TABLE IF EXISTS seoul_commercial_master;
 CREATE EXTERNAL TABLE seoul_commercial_master (
     `기준_년분기_코드`    STRING,
@@ -47,7 +43,7 @@ WITH Q1_1_base AS (
         `자치구_코드_명`, `상권_코드`, `기준_년분기_코드`,
         SUM(`당월_매출_금액`) AS `분기_총매출`,
         MAX(`총_유동인구_수`) AS `분기_최대_유동인구`
-    FROM seoul_commercial.seoul_commercial_master
+    FROM seoul_commercial_master
     WHERE `자치구_코드_명` IS NOT NULL AND `자치구_코드_명` != '미상'
     GROUP BY `자치구_코드_명`, `상권_코드`, `기준_년분기_코드`
 )
@@ -65,7 +61,7 @@ WITH Q1_2_quarter AS (
         `자치구_코드_명`, `상권_코드`, `기준_년분기_코드`,
         SUM(`당월_매출_금액`) AS `분기_총매출`,
         SUM(`점포_수`)        AS `분기_총점포수`
-    FROM seoul_commercial.seoul_commercial_master
+    FROM seoul_commercial_master
     WHERE `자치구_코드_명` IS NOT NULL AND `자치구_코드_명` != '미상'
     GROUP BY `자치구_코드_명`, `상권_코드`, `기준_년분기_코드`
 ),
@@ -88,7 +84,7 @@ ORDER BY `점포당_평균매출_억원` DESC;
 WITH Base_Stats AS (
     SELECT `자치구_코드_명`, `서비스_업종_코드_명`,
         SUM(`당월_매출_금액`) AS `매출`, SUM(`점포_수`) AS `점포수`
-    FROM seoul_commercial.seoul_commercial_master
+    FROM seoul_commercial_master
     WHERE `자치구_코드_명` IS NOT NULL AND `자치구_코드_명` != '미상'
     GROUP BY `자치구_코드_명`, `서비스_업종_코드_명`
 ),
@@ -123,7 +119,7 @@ WITH Q2_quarter AS (
         `상권_코드`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`, `기준_년분기_코드`,
         SUM(`당월_매출_금액`) / NULLIF(SUM(`점포_수`), 0) / 3.0 AS `월_점포당_매출`,
         AVG(`점포_수`) AS `분기_점포수`
-    FROM seoul_commercial.seoul_commercial_master
+    FROM seoul_commercial_master
     GROUP BY `상권_코드`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`, `기준_년분기_코드`
 ),
 Q2_pivot AS (
@@ -191,7 +187,7 @@ WITH Q2_quarter AS (
         `상권_코드`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`, `기준_년분기_코드`,
         SUM(`당월_매출_금액`) / NULLIF(SUM(`점포_수`), 0) / 3.0 AS `월_점포당_매출`,
         AVG(`점포_수`) AS `분기_점포수`
-    FROM seoul_commercial.seoul_commercial_master
+    FROM seoul_commercial_master
     GROUP BY `상권_코드`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`, `기준_년분기_코드`
 ),
 Q2_pivot AS (
