@@ -1,5 +1,5 @@
 PYTHON  := /home/maria_dev/anaconda3/bin/python
-SPARK    SPARK    := PYSPARK_PYTHON=/home/maria_dev/anaconda3/bin/python PYSPARK_DRIVER_PYTHON=/home/maria_dev/anaconda3/bin/python spark-submit
+SPARK    := PYSPARK_PYTHON=/home/maria_dev/anaconda3/bin/python PYSPARK_DRIVER_PYTHON=/home/maria_dev/anaconda3/bin/python spark-submit
 INGEST   := src/ingest
 PIPELINE := src/pipeline
 HDFS     := /user/maria_dev/seoul-commercial-analysis
