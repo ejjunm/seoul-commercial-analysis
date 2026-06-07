@@ -3,7 +3,7 @@ ENV_DIR  := /home/maria_dev/anaconda3/envs/spark2_env
 PYTHON   := $(ENV_DIR)/bin/python
 PIP      := $(ENV_DIR)/bin/pip
 SPARK    := PYSPARK_PYTHON=$(PYTHON) PYSPARK_DRIVER_PYTHON=$(PYTHON) spark-submit
-HIVE     := hive
+BEELINE  := beeline -u "jdbc:hive2://sandbox-hdp.hortonworks.com:2181/default;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2" -n maria_dev -p maria_dev --hiveconf hive.execution.engine=tez
 INGEST   := src/ingest
 PIPELINE := src/pipeline
 ANALYZE  := src/analyze
@@ -37,7 +37,7 @@ ml:
 
 analyze:
 	@echo "=== [6/6] Creating Hive tables + Running Q1/Q2 Analysis ==="
-	$(HIVE) -f $(ANALYZE)/analyze_insight.hql
+	$(BEELINE) -f $(ANALYZE)/analyze_insight.hql
 
 dashboard:
 	@echo "=== Building Dashboard CSVs ==="
