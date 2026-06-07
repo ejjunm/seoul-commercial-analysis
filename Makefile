@@ -3,7 +3,7 @@ ENV_DIR  := /home/maria_dev/anaconda3/envs/spark2_env
 PYTHON   := $(ENV_DIR)/bin/python
 PIP      := $(ENV_DIR)/bin/pip
 SPARK    := PYSPARK_PYTHON=$(PYTHON) PYSPARK_DRIVER_PYTHON=$(PYTHON) spark-submit
-BEELINE  := beeline -u "jdbc:hive2://sandbox-hdp.hortonworks.com:2181/default;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2" -n maria_dev -p maria_dev --hiveconf hive.execution.engine=tez
+BEELINE  := beeline -u "jdbc:hive2://localhost:10000/default" -n maria_dev
 INGEST   := src/ingest
 PIPELINE := src/pipeline
 ANALYZE  := src/analyze
