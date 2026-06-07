@@ -5,6 +5,34 @@ from pyproj import Transformer
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 
+COLUMN_MAP = {
+    "stdr_yyqu_cd": "기준_년분기_코드",
+    "trdar_se_cd": "상권_구분_코드",
+    "trdar_se_cd_nm": "상권_구분_코드_명",
+    "trdar_cd": "상권_코드",
+    "trdar_cd_nm": "상권_코드_명",
+    "svc_induty_cd": "서비스_업종_코드",
+    "svc_induty_cd_nm": "서비스_업종_코드_명",
+    "thsmon_selng_amt": "당월_매출_금액",
+    "thsmon_selng_co": "당월_매출_건수",
+    "agrde_20_selng_amt": "연령대_20_매출_금액",
+    "agrde_30_selng_amt": "연령대_30_매출_금액",
+    "stor_co": "점포_수",
+    "opbiz_stor_co": "개업_점포_수",
+    "clsbiz_stor_co": "폐업_점포_수",
+    "tot_flpop_co": "총_유동인구_수",
+    "xnts_vl": "엑스좌표_값",
+    "ynts_vl": "와이좌표_값",
+    "signgu_cd_nm": "자치구_코드_명",
+    "adstrd_cd_nm": "행정동_코드_명"
+}
+
+def standardize_headers(df):
+    for eng, kor in COLUMN_MAP.items():
+        if eng in df.columns:
+            df = df.withColumnRenamed(eng, kor)
+    return df
+
 HDFS_BASE = "/user/maria_dev/seoul-commercial-analysis"
 HDFS_RAW  = f"{HDFS_BASE}/data/raw"
 HDFS_OUT  = f"{HDFS_BASE}/data/processed"
