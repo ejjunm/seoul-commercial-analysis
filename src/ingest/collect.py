@@ -5,8 +5,8 @@ import shutil
 import subprocess
 import requests
 
-TMP_DIR  = "/tmp/seoul_commercial_analysis/raw"
-HDFS_RAW = "/user/maria_dev/seoul_commercial_analysis/raw"
+TMP_DIR  = "/tmp/seoul-commercial-analysis/raw"
+HDFS_RAW = "/user/maria_dev/seoul-commercial-analysis/raw"
 ZIP_URL  = "https://datafile.seoul.go.kr/bigfile/iot/inf/nio_download.do?&useCache=false"
 CSV_URL  = "https://datafile.seoul.go.kr/bigfile/iot/sheet/csv/download.do"
 CHUNK    = 1024 * 1024

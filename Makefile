@@ -1,6 +1,6 @@
 PYTHON := python3
 SRC    := src/ingestion
-HDFS   := /user/maria_dev/seoul_commercial_analysis
+HDFS   := /user/maria_dev/seoul-commercial-analysis
 
 .PHONY: all collect sample hdfs-ls clean
 
@@ -16,4 +16,4 @@ hdfs-ls:
 	@hdfs dfs -ls $(HDFS)/raw 2>/dev/null || echo "(없음)"
 
 clean:
-	rm -rf /tmp/seoul_commercial_analysis ./data/sample
+	rm -rf /tmp/seoul-commercial-analysis ./data/sample
