@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 import pandas as pd
@@ -37,7 +38,9 @@ HDFS_BASE = "/user/maria_dev/seoul-commercial-analysis"
 HDFS_RAW  = f"{HDFS_BASE}/data/raw"
 HDFS_OUT  = f"{HDFS_BASE}/data/processed"
 TEMP_DIR  = "/tmp/seoul-commercial-analysis"
-TEMP_AREA = f"{TEMP_DIR}/area_with_coords.csv"
+
+TEMP_AREA_LOCAL = f"{TEMP_DIR}/area_with_coords.csv"
+TEMP_AREA_SPARK = f"file://{TEMP_AREA_LOCAL}"
 
 TARGET_QUARTERS = [20241, 20242, 20243, 20244, 20251, 20252, 20253, 20254]
 TARGET_INDUSTRIES = [
@@ -101,18 +104,19 @@ subprocess.run(
 
 pdf_area = pd.read_csv(f"{TEMP_DIR}/area.csv", encoding="utf-8")
 pdf_area.rename(columns=COLUMN_MAP, inplace=True)
+
 transformer = Transformer.from_crs("EPSG:5181", "EPSG:4326", always_xy=True)
 xs = pd.to_numeric(pdf_area["엑스좌표_값"], errors="coerce").to_numpy()
 ys = pd.to_numeric(pdf_area["와이좌표_값"], errors="coerce").to_numpy()
 pdf_area["경도"], pdf_area["위도"] = transformer.transform(xs, ys)
 
 pdf_area = pdf_area[["상권_코드", "상권_구분_코드_명", "상권_코드_명",
-                "자치구_코드_명", "행정동_코드_명", "경도", "위도"]].copy()
+                    "자치구_코드_명", "행정동_코드_명", "경도", "위도"]].copy()
 for c in ["상권_구분_코드_명", "상권_코드_명", "자치구_코드_명", "행정동_코드_명"]:
     pdf_area[c] = pdf_area[c].fillna("미상")
-pdf_area.to_csv(TEMP_AREA, index=False, encoding="utf-8")
+pdf_area.to_csv(TEMP_AREA_LOCAL, index=False, encoding="utf-8")
 
-df_area = spark.read.csv(TEMP_AREA, header=True, encoding="utf-8") \
+df_area = spark.read.csv(TEMP_AREA_SPARK, header=True, encoding="utf-8") \
     .withColumn("경도", col("경도").cast("double")) \
     .withColumn("위도", col("위도").cast("double")) \
     .fillna("미상", subset=["상권_구분_코드_명", "상권_코드_명", "자치구_코드_명", "행정동_코드_명"])
