@@ -1,4 +1,4 @@
-PYTHON := python3
+PYTHON  := /home/maria_dev/anaconda3/bin/python
 SRC    := src/ingest
 HDFS   := /user/maria_dev/seoul-commercial-analysis
 
