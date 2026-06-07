@@ -1,4 +1,5 @@
 import os
+import subprocess
 import pandas as pd
 import numpy as np
 import xgboost as xgb
@@ -234,13 +235,13 @@ final_ranking = df_predict[[
     "상권_경쟁밀도", "청년안착_적합도", "진입가능성", "청년_라이징_추천점수"
 ]].sort_values("청년_라이징_추천점수", ascending=False)
 
-num_cols = ["MZ_매출_비중", "상대_시장활력도_비율", "상권_특화도_LQ",
-            "상권_경쟁밀도", "청년안착_적합도", "진입가능성", "청년_라이징_추천점수"]
-final_ranking[num_cols] = final_ranking[num_cols].astype(float).fillna(0.0)
-final_ranking = final_ranking.reset_index(drop=True)
-
-spark.createDataFrame(final_ranking).coalesce(1).write.mode("overwrite").parquet(OUTPUT_PATH)
-print(f"저장 완료: {OUTPUT_PATH}")
-print(f"SHAP 플롯: {SHAP_PNG}")
+LOCAL_RESULT = f"{TMP_DIR}/seoul_q3_ml_result.parquet"
+final_ranking.to_parquet(LOCAL_RESULT, index=False)
 
 spark.stop()
+
+subprocess.run(["hdfs", "dfs", "-mkdir", "-p", OUTPUT_PATH], check=True)
+subprocess.run(["hdfs", "dfs", "-put", "-f", LOCAL_RESULT, f"{OUTPUT_PATH}/part-0.parquet"], check=True)
+os.remove(LOCAL_RESULT)
+print(f"저장 완료: {OUTPUT_PATH}")
+print(f"SHAP 플롯: {SHAP_PNG}")
