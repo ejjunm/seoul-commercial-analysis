@@ -8,9 +8,9 @@ PIPELINE := src/pipeline
 ANALYZE  := src/analyze
 HDFS     := /user/maria_dev/seoul-commercial-analysis
 
-.PHONY: all setup ingest preprocess analyze ml dashboard app pipeline sample hdfs-ls clean
+.PHONY: all setup ingest preprocess analyze ml dashboard dashboard-html pipeline sample hdfs-ls clean
 
-all: setup pipeline ml analyze dashboard
+all: setup pipeline ml analyze dashboard dashboard-html
 
 setup:
 	@echo "=== [1/6] Checking/Creating Python 3.7 Environment for Spark 2.x ==="
@@ -42,15 +42,10 @@ dashboard:
 	@echo "=== Building Dashboard CSVs ==="
 	$(SPARK) $(ANALYZE)/build_dashboard_data.py
 
-app:
-	@echo "=== Launching Streamlit (http://<VM_IP>:4200) ==="
-	$(ENV_DIR)/bin/streamlit run $(ANALYZE)/app.py \
-		--server.port 4200 \
-		--server.address 0.0.0.0 \
-		--server.headless true \
-		--server.enableCORS false \
-		--server.enableXsrfProtection false \
-		--browser.gatherUsageStats false
+dashboard-html:
+	@echo "=== Building static HTML dashboard ==="
+	$(PYTHON) $(ANALYZE)/build_dashboard_html.py
+	@echo "생성 완료: data/processed/dashboard/dashboard.html"
 
 sample:
 	cd $(INGEST) && $(PYTHON) make_sample.py
