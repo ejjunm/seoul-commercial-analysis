@@ -1,5 +1,5 @@
 PYTHON := python3
-SRC    := src/ingestion
+SRC    := src/ingest
 HDFS   := /user/maria_dev/seoul-commercial-analysis
 
 .PHONY: all collect sample hdfs-ls clean
