@@ -3,10 +3,10 @@ import sys
 import subprocess
 import pandas as pd
 
-HDFS_RAW    = "/user/maria_dev/seoul-commercial-analysis/raw"
-SAMPLE_DIR  = "./data/sample"
+HDFS_RAW   = "/user/maria_dev/seoul-commercial-analysis/data/raw"
+SAMPLE_DIR = "../../data/sample"
+TMP_DIR    = "/tmp/seoul-commercial-analysis/raw"
 SAMPLE_ROWS = 100
-TMP_DIR     = "/tmp/seoul-commercial-analysis/raw"
 
 
 def main():

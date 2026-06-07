@@ -1,19 +1,27 @@
 PYTHON  := /home/maria_dev/anaconda3/bin/python
-SRC    := src/ingest
-HDFS   := /user/maria_dev/seoul-commercial-analysis
+SPARK    := spark-submit
+INGEST   := src/ingest
+PIPELINE := src/pipeline
+HDFS     := /user/maria_dev/seoul-commercial-analysis
 
-.PHONY: all collect sample hdfs-ls clean
+.PHONY: all ingest preprocess pipeline sample hdfs-ls clean
 
-all: collect sample
+all: pipeline sample
 
-collect:
-	cd $(SRC) && $(PYTHON) collect.py
+ingest:
+	cd $(INGEST) && $(PYTHON) collect.py
+
+preprocess:
+	$(SPARK) $(PIPELINE)/preprocess.py
+
+pipeline: ingest preprocess
 
 sample:
-	cd $(SRC) && $(PYTHON) make_sample.py
+	cd $(INGEST) && $(PYTHON) make_sample.py
 
 hdfs-ls:
-	@hdfs dfs -ls $(HDFS)/raw 2>/dev/null || echo "(없음)"
+	@echo "=== raw ===" && hdfs dfs -ls $(HDFS)/data/raw       2>/dev/null || echo "(없음)"
+	@echo "=== processed ===" && hdfs dfs -ls $(HDFS)/data/processed 2>/dev/null || echo "(없음)"
 
 clean:
 	rm -rf /tmp/seoul-commercial-analysis ./data/sample
