@@ -51,8 +51,9 @@ spark = SparkSession.builder \
 
 spark.sparkContext.setLogLevel("ERROR")
 
-df_sales = spark.read.csv(f"{HDFS_RAW}/sales_202*.csv", header=True, encoding="utf-8") \
-    .select("기준_년분기_코드", "상권_코드", "서비스_업종_코드_명",
+df_sales = spark.read.csv(f"{HDFS_RAW}/sales_202*.csv", header=True, encoding="utf-8")
+df_sales = standardize_headers(df_sales)
+df_sales = df_sales.select("기준_년분기_코드", "상권_코드", "서비스_업종_코드_명",
             "당월_매출_금액", "당월_매출_건수", "연령대_20_매출_금액", "연령대_30_매출_금액") \
     .withColumn("당월_매출_금액",      col("당월_매출_금액").cast("long")) \
     .withColumn("당월_매출_건수",      col("당월_매출_건수").cast("long")) \
@@ -67,8 +68,9 @@ df_sales = spark.read.csv(f"{HDFS_RAW}/sales_202*.csv", header=True, encoding="u
     .dropna(subset=["상권_코드", "서비스_업종_코드_명", "당월_매출_금액", "당월_매출_건수"]) \
     .fillna(0, subset=["연령대_20_매출_금액", "연령대_30_매출_금액"])
 
-df_stores = spark.read.csv(f"{HDFS_RAW}/stores_202*.csv", header=True, encoding="utf-8") \
-    .select("기준_년분기_코드", "상권_코드", "서비스_업종_코드_명",
+df_stores = spark.read.csv(f"{HDFS_RAW}/stores_202*.csv", header=True, encoding="utf-8")
+df_stores = standardize_headers(df_stores)
+df_stores = df_stores.select("기준_년분기_코드", "상권_코드", "서비스_업종_코드_명",
             "점포_수", "개업_점포_수", "폐업_점포_수") \
     .withColumn("점포_수",      col("점포_수").cast("long")) \
     .withColumn("개업_점포_수", col("개업_점포_수").cast("long")) \
@@ -81,8 +83,9 @@ df_stores = spark.read.csv(f"{HDFS_RAW}/stores_202*.csv", header=True, encoding=
     .dropna(subset=["상권_코드", "서비스_업종_코드_명", "점포_수"]) \
     .fillna(0, subset=["개업_점포_수", "폐업_점포_수"])
 
-df_foot = spark.read.csv(f"{HDFS_RAW}/foot_traffic.csv", header=True, encoding="utf-8") \
-    .select("기준_년분기_코드", "상권_코드", "총_유동인구_수") \
+df_foot = spark.read.csv(f"{HDFS_RAW}/foot_traffic.csv", header=True, encoding="utf-8")
+df_foot = standardize_headers(df_foot)
+df_foot = df_foot.select("기준_년분기_코드", "상권_코드", "총_유동인구_수") \
     .withColumn("총_유동인구_수", col("총_유동인구_수").cast("long")) \
     .filter(
         col("기준_년분기_코드").isin(TARGET_QUARTERS) &
@@ -97,13 +100,14 @@ subprocess.run(
 )
 
 pdf_area = pd.read_csv(f"{TEMP_DIR}/area.csv", encoding="utf-8")
+pdf_area.rename(columns=COLUMN_MAP, inplace=True)
 transformer = Transformer.from_crs("EPSG:5181", "EPSG:4326", always_xy=True)
 xs = pd.to_numeric(pdf_area["엑스좌표_값"], errors="coerce").to_numpy()
 ys = pd.to_numeric(pdf_area["와이좌표_값"], errors="coerce").to_numpy()
 pdf_area["경도"], pdf_area["위도"] = transformer.transform(xs, ys)
 
 pdf_area = pdf_area[["상권_코드", "상권_구분_코드_명", "상권_코드_명",
-                    "자치구_코드_명", "행정동_코드_명", "경도", "위도"]].copy()
+                "자치구_코드_명", "행정동_코드_명", "경도", "위도"]].copy()
 for c in ["상권_구분_코드_명", "상권_코드_명", "자치구_코드_명", "행정동_코드_명"]:
     pdf_area[c] = pdf_area[c].fillna("미상")
 pdf_area.to_csv(TEMP_AREA, index=False, encoding="utf-8")
