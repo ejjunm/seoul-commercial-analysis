@@ -10,7 +10,7 @@ HDFS     := /user/maria_dev/seoul-commercial-analysis
 
 .PHONY: all setup ingest preprocess analyze ml dashboard dashboard-html pipeline sample hdfs-ls clean
 
-all: setup pipeline ml analyze dashboard dashboard-html
+all: setup pipeline ml analyze dashboard
 
 setup:
 	@echo "=== [1/6] Checking/Creating Python 3.7 Environment for Spark 2.x ==="
@@ -45,7 +45,8 @@ dashboard:
 dashboard-html:
 	@echo "=== Building static HTML dashboard ==="
 	$(PYTHON) $(ANALYZE)/build_dashboard_html.py
-	@echo "생성 완료: data/processed/dashboard/dashboard.html"
+	@echo "=== Serving dashboard at http://<VM_IP>:8888/dashboard.html ==="
+	cd data/processed/dashboard && $(PYTHON) -m http.server 8888
 
 sample:
 	cd $(INGEST) && $(PYTHON) make_sample.py
