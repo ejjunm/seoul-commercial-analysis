@@ -12,9 +12,11 @@ m = m.withColumn("기준_년분기_코드", F.col("기준_년분기_코드").cas
 
 mg = m.filter(F.col("자치구_코드_명").isNotNull() & (F.col("자치구_코드_명") != "미상"))
 
+# 상권당 좌표 (Q2·Q3 지도 join 공용)
 coords = m.groupBy("상권_코드").agg(
     F.first("경도",         True).alias("경도"),
     F.first("위도",         True).alias("위도"),
+    F.first("자치구_코드_명", True).alias("자치구_코드_명"),
 )
 
 base = mg.groupBy("자치구_코드_명", "상권_코드", "기준_년분기_코드").agg(
@@ -31,10 +33,10 @@ gu = base.groupBy("자치구_코드_명").agg(
 ).withColumn("구_총매출_억원",    F.round(F.col("구_총매출_원") / 1e8, 1)) \
  .withColumn("분기평균_유동인구_만명", F.round(F.col("분기평균_유동인구") / 1e4, 1)) \
  .withColumn("점포당_평균매출_억원",
-    F.round(F.col("평균_분기매출") / F.col("평균_분기점포수") / 1e8, 3))
+     F.round(F.col("평균_분기매출") / F.col("평균_분기점포수") / 1e8, 3))
 
 tab1 = gu.select("자치구_코드_명", "보유_상권_수", "구_총매출_억원",
-                "분기평균_유동인구_만명", "점포당_평균매출_억원").toPandas()
+                 "분기평균_유동인구_만명", "점포당_평균매출_억원").toPandas()
 tab1.to_csv(f"{out_dir}/tab1_gu_summary.csv", index=False, encoding="utf-8-sig")
 
 base_lq = mg.groupBy("자치구_코드_명", "서비스_업종_코드_명").agg(
@@ -99,7 +101,7 @@ q2_m = q2_pivot.filter(F.col("영업_분기수") >= 4) \
     .withColumn("abs_growth",  F.col("후반기_평균") - F.col("전반기_평균")) \
     .withColumn("growth_rate",
         F.when(F.col("전반기_평균") > 0,
-            F.col("후반기_평균") / F.col("전반기_평균") - 1.0).otherwise(None)) \
+               F.col("후반기_평균") / F.col("전반기_평균") - 1.0).otherwise(None)) \
     .withColumn("up_count",
         F.when(F.col("Q2")>F.col("Q1"),1).otherwise(0) +
         F.when(F.col("Q3")>F.col("Q2"),1).otherwise(0) +
@@ -153,8 +155,8 @@ sel = ["상권_코드", "상권_코드_명", "자치구_코드_명", "서비스_
        "growth_rate", "up_count", "메가_상승_총점"]
 
 tab2 = mega.select(sel).union(rising.select(sel)) \
-        .join(coords, "상권_코드", "left") \
-        .toPandas()
+           .join(coords, "상권_코드", "left") \
+           .toPandas()
 
 tab2["24년_월점포당_만원"] = (tab2["전반기_평균"] / 10_000).round(0).astype("Int64")
 tab2["25년_월점포당_만원"] = (tab2["후반기_평균"] / 10_000).round(0).astype("Int64")
@@ -162,7 +164,6 @@ tab2["성장률_퍼센트"]      = (tab2["growth_rate"] * 100).round(1)
 tab2["평균_점포수"]        = tab2["평균_점포수"].round(1)
 tab2["메가_상승_총점"]     = tab2["메가_상승_총점"].round(2)
 tab2.to_csv(f"{out_dir}/tab2_hotplaces.csv", index=False, encoding="utf-8-sig")
-
 
 q3  = spark.read.parquet("/user/maria_dev/seoul-commercial-analysis/data/processed/seoul_q3_ml_result")
 m25 = m.filter(F.col("기준_년분기_코드").substr(1, 4) == "2025")
@@ -172,7 +173,7 @@ rev = m25.groupBy("상권_코드", "서비스_업종_코드_명").agg(
 
 tab3_pd = q3.join(coords, "상권_코드", "left") \
             .join(rev.select("상권_코드", "서비스_업종_코드_명", "월_점포당_매출_만원"),
-                on=["상권_코드", "서비스_업종_코드_명"], how="left") \
+                  on=["상권_코드", "서비스_업종_코드_명"], how="left") \
             .filter(F.col("경도").isNotNull() & F.col("위도").isNotNull()) \
             .select(
                 "상권_코드", "상권_코드_명", "자치구_코드_명", "서비스_업종_코드_명",
