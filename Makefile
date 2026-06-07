@@ -43,9 +43,9 @@ dashboard:
 	$(SPARK) $(ANALYZE)/build_dashboard_data.py
 
 app:
-	@echo "=== Launching Streamlit (http://<VM_IP>:8888) ==="
+	@echo "=== Launching Streamlit (http://<VM_IP>:4200) ==="
 	$(ENV_DIR)/bin/streamlit run $(ANALYZE)/app.py \
-		--server.port 8888 \
+		--server.port 4200 \
 		--server.address 0.0.0.0 \
 		--server.headless true \
 		--server.enableCORS false \
