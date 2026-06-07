@@ -1,8 +1,12 @@
-import os
 import sys
-import subprocess
-import cloudpickle
-sys.modules['pyspark.cloudpickle'] = cloudpickle
+import types
+orig_CodeType = types.CodeType
+def patched_CodeType(*args, **kwargs):
+    if len(args) == 15:
+        args = args[:1] + (0,) + args[1:]
+    return orig_CodeType(*args, **kwargs)
+types.CodeType = patched_CodeType
+import os
 import subprocess
 import pandas as pd
 from pyproj import Transformer
