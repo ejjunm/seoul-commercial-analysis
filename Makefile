@@ -10,7 +10,13 @@ HDFS     := /user/maria_dev/seoul-commercial-analysis
 all: setup pipeline sample
 
 setup:
-	$(PIP) install pyproj cloudpickle
+	$(PIP) install pyproj
+	@if [ -w /usr/hdp/current/spark2-client/conf/spark-defaults.conf ]; then \
+		if ! grep -q "spark.executorEnv.PYTHONPATH" /usr/hdp/current/spark2-client/conf/spark-defaults.conf; then \
+			echo "spark.executorEnv.PYTHONPATH /home/maria_dev/anaconda3/bin/python" >> /usr/hdp/current/spark2-client/conf/spark-defaults.conf; \
+			echo "spark.yarn.appMasterEnv.PYTHONPATH /home/maria_dev/anaconda3/bin/python" >> /usr/hdp/current/spark2-client/conf/spark-defaults.conf; \
+		fi \
+	fi
 
 ingest:
 	cd $(INGEST) && $(PYTHON) collect.py
