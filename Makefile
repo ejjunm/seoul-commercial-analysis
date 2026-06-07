@@ -3,38 +3,61 @@ ENV_DIR  := /home/maria_dev/anaconda3/envs/spark2_env
 PYTHON   := $(ENV_DIR)/bin/python
 PIP      := $(ENV_DIR)/bin/pip
 SPARK    := PYSPARK_PYTHON=$(PYTHON) PYSPARK_DRIVER_PYTHON=$(PYTHON) spark-submit
+HIVE     := hive
 INGEST   := src/ingest
 PIPELINE := src/pipeline
+ANALYZE  := src/analyze
 HDFS     := /user/maria_dev/seoul-commercial-analysis
 
-.PHONY: all setup ingest preprocess pipeline sample hdfs-ls clean
+.PHONY: all setup ingest preprocess analyze ml dashboard app pipeline sample hdfs-ls clean
 
-all: setup pipeline sample
+all: setup pipeline ml analyze dashboard
 
 setup:
-	@echo "=== [1/4] Checking/Creating Python 3.7 Environment for Spark 2.x ==="
+	@echo "=== [1/6] Checking/Creating Python 3.7 Environment for Spark 2.x ==="
 	@if [ ! -d "$(ENV_DIR)" ]; then \
 		$(CONDA) create -p $(ENV_DIR) python=3.7 -y; \
 	fi
-	@echo "=== [2/4] Installing dependencies ==="
-	$(PIP) install pyproj pandas requests
+	@echo "=== [2/6] Installing dependencies ==="
+	$(PIP) install pyproj pandas requests xgboost shap scikit-learn matplotlib streamlit plotly
 
 ingest:
-	@echo "=== [3/4] Running Data Ingestion ==="
+	@echo "=== [3/6] Running Data Ingestion ==="
 	cd $(INGEST) && $(PYTHON) collect.py
 
 preprocess:
-	@echo "=== [4/4] Running Spark Preprocessing ==="
+	@echo "=== [4/6] Running Spark Preprocessing ==="
 	$(SPARK) $(PIPELINE)/preprocess.py
 
 pipeline: ingest preprocess
 
+ml:
+	@echo "=== [5/6] Running Q3 ML (XGBoost) ==="
+	$(SPARK) $(ANALYZE)/ml_insight_q3.py
+
+analyze:
+	@echo "=== [6/6] Creating Hive tables + Running Q1/Q2 Analysis ==="
+	$(HIVE) -f $(ANALYZE)/analyze_insight.hql
+
+dashboard:
+	@echo "=== Building Dashboard CSVs ==="
+	$(SPARK) $(ANALYZE)/build_dashboard_data.py
+
+app:
+	@echo "=== Launching Streamlit (http://<VM_IP>:8501) ==="
+	$(ENV_DIR)/bin/streamlit run $(ANALYZE)/app.py \
+		--server.port 8501 \
+		--server.address 0.0.0.0 \
+		--server.headless true \
+		--server.enableCORS false \
+		--server.enableXsrfProtection false \
+		--browser.gatherUsageStats false
+
 sample:
-	@echo "=== [5/5] Extracting Samples ==="
 	cd $(INGEST) && $(PYTHON) make_sample.py
 
 hdfs-ls:
-	@echo "=== raw ===" && hdfs dfs -ls $(HDFS)/data/raw 2>/dev/null || echo "(없음)"
+	@echo "=== raw ==="       && hdfs dfs -ls $(HDFS)/data/raw       2>/dev/null || echo "(없음)"
 	@echo "=== processed ===" && hdfs dfs -ls $(HDFS)/data/processed 2>/dev/null || echo "(없음)"
 
 clean:
