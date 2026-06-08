@@ -1,31 +1,4 @@
-CREATE DATABASE IF NOT EXISTS maria_dev;
-
-USE maria_dev;
-
-DROP TABLE IF EXISTS seoul_commercial_master;
-
-CREATE EXTERNAL TABLE seoul_commercial_master (
-    `기준_년분기_코드`    STRING,
-    `상권_코드`          STRING,
-    `서비스_업종_코드_명`  STRING,
-    `당월_매출_금액`      BIGINT,
-    `당월_매출_건수`      BIGINT,
-    `연령대_20_매출_금액`  BIGINT,
-    `연령대_30_매출_금액`  BIGINT,
-    `점포_수`            BIGINT,
-    `개업_점포_수`        BIGINT,
-    `폐업_점포_수`        BIGINT,
-    `총_유동인구_수`      BIGINT,
-    `상권_구분_코드_명`    STRING,
-    `상권_코드_명`        STRING,
-    `자치구_코드_명`      STRING,
-    `행정동_코드_명`      STRING,
-    `경도`              DOUBLE,
-    `위도`              DOUBLE
-)
-STORED AS PARQUET
-LOCATION '/user/maria_dev/seoul-commercial-analysis/data/processed/master_dataset';
-
+-- Q1-1: 자치구별 규모 (총매출·상권수·유동인구)
 WITH Q1_1_base AS (
     SELECT
         `자치구_코드_명`, `상권_코드`, `기준_년분기_코드`,
@@ -44,6 +17,7 @@ FROM Q1_1_base
 GROUP BY `자치구_코드_명`
 ORDER BY `구_총매출_억원` DESC;
 
+-- Q1-2: 자치구별 실속 (점포당 매출)
 WITH Q1_2_quarter AS (
     SELECT
         `자치구_코드_명`, `상권_코드`, `기준_년분기_코드`,
@@ -69,6 +43,7 @@ SELECT
 FROM Q1_2_agg
 ORDER BY `점포당_평균매출_억원` DESC;
 
+-- Q1-3: 자치구별 랜드마크 업종 LQ
 WITH Base_Stats AS (
     SELECT `자치구_코드_명`, `서비스_업종_코드_명`,
         SUM(`당월_매출_금액`) AS `매출`, SUM(`점포_수`) AS `점포수`
@@ -111,6 +86,7 @@ FROM Weighted_LQ
 WHERE `rn` = 1
 ORDER BY `종합_특화도_LQ` DESC;
 
+-- Q2-1: 메가 핫플
 WITH Q2_quarter AS (
     SELECT
         `상권_코드`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`, `기준_년분기_코드`,
@@ -158,6 +134,7 @@ WHERE `평균_점포수` >= 30
 ORDER BY `growth_rate` DESC
 LIMIT 10;
 
+-- Q2-2: 라이징 핫플
 WITH Q2_quarter AS (
     SELECT
         `상권_코드`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`, `기준_년분기_코드`,
