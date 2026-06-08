@@ -132,7 +132,7 @@ Q2_mega_norm AS (
         MIN(`growth_rate`) OVER (PARTITION BY `서비스_업종_코드_명`) AS `min_spd`,
         MAX(`growth_rate`) OVER (PARTITION BY `서비스_업종_코드_명`) AS `max_spd`
     FROM Q2_mega
-),
+)
 SELECT
     `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`,
     ROUND(`평균_점포수`, 1)       AS `평균_점포수`,

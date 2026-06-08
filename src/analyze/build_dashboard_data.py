@@ -12,7 +12,6 @@ m = m.withColumn("기준_년분기_코드", F.col("기준_년분기_코드").cas
 
 mg = m.filter(F.col("자치구_코드_명").isNotNull() & (F.col("자치구_코드_명") != "미상"))
 
-# 상권당 좌표 (Q2·Q3 지도 join 공용)
 coords = m.groupBy("상권_코드").agg(
     F.first("경도",         True).alias("경도"),
     F.first("위도",         True).alias("위도"),
@@ -118,9 +117,7 @@ mega = q2_m.filter(
     (F.col("전반기_평균") >= 40_000_000) &
     (F.col("growth_rate") > 0) &
     F.col("growth_rate").isNotNull()
-).withColumn("ind_cnt", F.count("*").over(w_ind)) \
- .filter(F.col("ind_cnt") >= 3) \
- .withColumn("min_vol", F.min("abs_growth").over(w_ind)) \
+).withColumn("min_vol", F.min("abs_growth").over(w_ind)) \
  .withColumn("max_vol", F.max("abs_growth").over(w_ind)) \
  .withColumn("min_spd", F.min("growth_rate").over(w_ind)) \
  .withColumn("max_spd", F.max("growth_rate").over(w_ind)) \
