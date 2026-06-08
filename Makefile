@@ -36,7 +36,9 @@ ml:
 
 analyze:
 	@echo "=== [6/6] Running Q1/Q2 Analysis with Hive ==="
-	HADOOP_OPTS="-Dfile.encoding=UTF-8" hive -f $(ANALYZE)/analyze_insight.hql
+	beeline -u "jdbc:hive2://localhost:10000/default" -n maria_dev \
+		--hiveconf mapreduce.job.queuename=default \
+		-f $(ANALYZE)/analyze_insight.hql
 
 dashboard:
 	@echo "=== Building Dashboard CSVs ==="
