@@ -1,3 +1,7 @@
+CREATE DATABASE IF NOT EXISTS maria_dev;
+
+USE maria_dev;
+
 DROP TABLE IF EXISTS seoul_commercial_master;
 
 CREATE EXTERNAL TABLE seoul_commercial_master (
@@ -59,9 +63,9 @@ Q1_2_agg AS (
 )
 SELECT
     `자치구_코드_명`,
-    ROUND(`평균_분기매출` / 100000000, 1)                              AS `상권당_평균분기매출_억원`,
-    ROUND(`평균_분기점포수`, 0)                                         AS `상권당_평균점포수`,
-    ROUND((`평균_분기매출` / NULLIF(`평균_분기점포수`, 0)) / 100000000, 3) AS `점포당_평균매출_억원`
+    ROUND(`평균_분기매출` / 100000000, 1)                                         AS `상권당_평균분기매출_억원`,
+    ROUND(`평균_분기점포수`, 0)                                                    AS `상권당_평균점포수`,
+    ROUND((`평균_분기매출` / NULLIF(`평균_분기점포수`, 0)) / 100000000, 3)          AS `점포당_평균매출_억원`
 FROM Q1_2_agg
 ORDER BY `점포당_평균매출_억원` DESC;
 
@@ -73,10 +77,12 @@ WITH Base_Stats AS (
     GROUP BY `자치구_코드_명`, `서비스_업종_코드_명`
 ),
 Gu_Totals AS (
-    SELECT `자치구_코드_명`, SUM(`매출`) AS `구_매출`, SUM(`점포수`) AS `구_점포수` FROM Base_Stats GROUP BY `자치구_코드_명`
+    SELECT `자치구_코드_명`, SUM(`매출`) AS `구_매출`, SUM(`점포수`) AS `구_점포수`
+    FROM Base_Stats GROUP BY `자치구_코드_명`
 ),
 Seoul_Totals AS (
-    SELECT `서비스_업종_코드_명`, SUM(`매출`) AS `업종_매출`, SUM(`점포수`) AS `업종_점포수`,
+    SELECT `서비스_업종_코드_명`,
+        SUM(`매출`) AS `업종_매출`, SUM(`점포수`) AS `업종_점포수`,
         (SELECT SUM(`매출`) FROM Base_Stats) AS `서울_매출`,
         (SELECT SUM(`점포수`) FROM Base_Stats) AS `서울_점포수`
     FROM Base_Stats GROUP BY `서비스_업종_코드_명`
@@ -86,14 +92,21 @@ Weighted_LQ AS (
         a.`자치구_코드_명`, a.`서비스_업종_코드_명`,
         (a.`매출` / b.`구_매출`) / (c.`업종_매출` / c.`서울_매출`) AS `Rev_LQ`,
         (a.`점포수` / b.`구_점포수`) / (c.`업종_점포수` / c.`서울_점포수`) AS `Store_LQ`,
-        ROW_NUMBER() OVER(PARTITION BY a.`자치구_코드_명` ORDER BY ((a.`매출` / b.`구_매출`) / (c.`업종_매출` / c.`서울_매출`) * 0.7) + ((a.`점포수` / b.`구_점포수`) / (c.`업종_점포수` / c.`서울_점포수`) * 0.3) DESC) AS `rn`
+        ROW_NUMBER() OVER (
+            PARTITION BY a.`자치구_코드_명`
+            ORDER BY ((a.`매출` / b.`구_매출`) / (c.`업종_매출` / c.`서울_매출`) * 0.7)
+                   + ((a.`점포수` / b.`구_점포수`) / (c.`업종_점포수` / c.`서울_점포수`) * 0.3) DESC
+        ) AS `rn`
     FROM Base_Stats a
     JOIN Gu_Totals b ON a.`자치구_코드_명` = b.`자치구_코드_명`
     JOIN Seoul_Totals c ON a.`서비스_업종_코드_명` = c.`서비스_업종_코드_명`
 )
-SELECT `자치구_코드_명`, `서비스_업종_코드_명` AS `랜드마크_업종`,
+SELECT
+    `자치구_코드_명`,
+    `서비스_업종_코드_명` AS `랜드마크_업종`,
     ROUND((`Rev_LQ` * 0.7) + (`Store_LQ` * 0.3), 2) AS `종합_특화도_LQ`,
-    ROUND(`Rev_LQ`, 2) AS `매출_LQ`, ROUND(`Store_LQ`, 2) AS `점포수_LQ`
+    ROUND(`Rev_LQ`, 2) AS `매출_LQ`,
+    ROUND(`Store_LQ`, 2) AS `점포수_LQ`
 FROM Weighted_LQ
 WHERE `rn` = 1
 ORDER BY `종합_특화도_LQ` DESC;
@@ -111,59 +124,38 @@ Q2_pivot AS (
         `상권_코드`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`,
         COUNT(DISTINCT `기준_년분기_코드`) AS `영업_분기수`,
         AVG(`분기_점포수`) AS `평균_점포수`,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20241' THEN `월_점포당_매출` END), 0) AS Q1_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20242' THEN `월_점포당_매출` END), 0) AS Q2_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20243' THEN `월_점포당_매출` END), 0) AS Q3_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20244' THEN `월_점포당_매출` END), 0) AS Q4_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20251' THEN `월_점포당_매출` END), 0) AS Q5_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20252' THEN `월_점포당_매출` END), 0) AS Q6_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20253' THEN `월_점포당_매출` END), 0) AS Q7_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20254' THEN `월_점포당_매출` END), 0) AS Q8_Rev
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20241' THEN `월_점포당_매출` END), 0) AS Q1,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20242' THEN `월_점포당_매출` END), 0) AS Q2,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20243' THEN `월_점포당_매출` END), 0) AS Q3,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20244' THEN `월_점포당_매출` END), 0) AS Q4,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20251' THEN `월_점포당_매출` END), 0) AS Q5,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20252' THEN `월_점포당_매출` END), 0) AS Q6,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20253' THEN `월_점포당_매출` END), 0) AS Q7,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20254' THEN `월_점포당_매출` END), 0) AS Q8
     FROM Q2_quarter
     GROUP BY `상권_코드`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`
 ),
 Q2_metrics AS (
     SELECT *,
-        ((Q1_Rev + Q2_Rev + Q3_Rev + Q4_Rev) / 4.0) AS `전반기_평균`,
-        ((Q5_Rev + Q6_Rev + Q7_Rev + Q8_Rev) / 4.0) AS `후반기_평균`,
-        (((Q5_Rev + Q6_Rev + Q7_Rev + Q8_Rev) / 4.0) - ((Q1_Rev + Q2_Rev + Q3_Rev + Q4_Rev) / 4.0)) AS `abs_growth`,
-        (((Q5_Rev + Q6_Rev + Q7_Rev + Q8_Rev) / 4.0) / NULLIF(((Q1_Rev + Q2_Rev + Q3_Rev + Q4_Rev) / 4.0), 0)) - 1.0 AS `growth_rate`,
-        (IF(Q2_Rev > Q1_Rev, 1, 0) + IF(Q3_Rev > Q2_Rev, 1, 0) + IF(Q4_Rev > Q3_Rev, 1, 0) +
-         IF(Q5_Rev > Q4_Rev, 1, 0) + IF(Q6_Rev > Q5_Rev, 1, 0) + IF(Q7_Rev > Q6_Rev, 1, 0) +
-         IF(Q8_Rev > Q7_Rev, 1, 0)) AS `up_count`
-    FROM Q2_pivot
-    WHERE `영업_분기수` >= 4
-),
-Q2_minmax AS (
-    SELECT `서비스_업종_코드_명`,
-        MIN(`abs_growth`) AS min_vol, MAX(`abs_growth`) AS max_vol,
-        MIN(`growth_rate`) AS min_spd, MAX(`growth_rate`) AS max_spd
-    FROM Q2_metrics
-    WHERE `전반기_평균` > 0 AND `후반기_평균` > 0
-    GROUP BY `서비스_업종_코드_명`
-    HAVING COUNT(*) >= 3
-),
-Q2_normalize AS (
-    SELECT a.*,
-        COALESCE(((a.`abs_growth` - b.min_vol) / NULLIF(b.max_vol - b.min_vol, 0)) * 100, 50) AS norm_vol,
-        COALESCE(((a.`growth_rate` - b.min_spd) / NULLIF(b.max_spd - b.min_spd, 0)) * 100, 50) AS norm_spd,
-        (a.`up_count` / 7.0) * 100 AS norm_cnt
-    FROM Q2_metrics a
-    JOIN Q2_minmax b ON a.`서비스_업종_코드_명` = b.`서비스_업종_코드_명`
+        (Q1+Q2+Q3+Q4)/4.0 AS `전반기_평균`,
+        (Q5+Q6+Q7+Q8)/4.0 AS `후반기_평균`,
+        ((Q5+Q6+Q7+Q8)/4.0) / NULLIF((Q1+Q2+Q3+Q4)/4.0, 0) - 1.0 AS `growth_rate`,
+        (IF(Q2>Q1,1,0)+IF(Q3>Q2,1,0)+IF(Q4>Q3,1,0)+IF(Q5>Q4,1,0)+
+         IF(Q6>Q5,1,0)+IF(Q7>Q6,1,0)+IF(Q8>Q7,1,0)) AS `up_count`
+    FROM Q2_pivot WHERE `영업_분기수` >= 4
 )
 SELECT
-    '메가 핫플' AS `구분`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`,
-    ROUND(`평균_점포수`, 1) AS `평균_점포수`,
-    ROUND(`전반기_평균` / 10000, 0) AS `24년_월점포당_만원`,
-    ROUND(`후반기_평균` / 10000, 0) AS `25년_월점포당_만원`,
-    ROUND(`growth_rate` * 100, 1)   AS `성장률_퍼센트`,
-    `up_count` AS `연속상승_횟수`,
-    ROUND((norm_vol * 0.60) + (norm_spd * 0.20) + (norm_cnt * 0.20), 2) AS `메가_상승_총점`
-FROM Q2_normalize
+    `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`,
+    ROUND(`평균_점포수`, 1)        AS `평균_점포수`,
+    ROUND(`전반기_평균`/10000, 0)  AS `24년_월점포당_만원`,
+    ROUND(`후반기_평균`/10000, 0)  AS `25년_월점포당_만원`,
+    ROUND(`growth_rate`*100, 1)   AS `성장률_퍼센트`,
+    `up_count`                    AS `연속상승_횟수`
+FROM Q2_metrics
 WHERE `평균_점포수` >= 30
   AND `전반기_평균` >= 40000000
   AND `growth_rate` > 0
-ORDER BY `메가_상승_총점` DESC
+ORDER BY `growth_rate` DESC
 LIMIT 10;
 
 WITH Q2_quarter AS (
@@ -179,35 +171,33 @@ Q2_pivot AS (
         `상권_코드`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`,
         COUNT(DISTINCT `기준_년분기_코드`) AS `영업_분기수`,
         AVG(`분기_점포수`) AS `평균_점포수`,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20241' THEN `월_점포당_매출` END), 0) AS Q1_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20242' THEN `월_점포당_매출` END), 0) AS Q2_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20243' THEN `월_점포당_매출` END), 0) AS Q3_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20244' THEN `월_점포당_매출` END), 0) AS Q4_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20251' THEN `월_점포당_매출` END), 0) AS Q5_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20252' THEN `월_점포당_매출` END), 0) AS Q6_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20253' THEN `월_점포당_매출` END), 0) AS Q7_Rev,
-        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20254' THEN `월_점포당_매출` END), 0) AS Q8_Rev
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20241' THEN `월_점포당_매출` END), 0) AS Q1,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20242' THEN `월_점포당_매출` END), 0) AS Q2,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20243' THEN `월_점포당_매출` END), 0) AS Q3,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20244' THEN `월_점포당_매출` END), 0) AS Q4,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20251' THEN `월_점포당_매출` END), 0) AS Q5,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20252' THEN `월_점포당_매출` END), 0) AS Q6,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20253' THEN `월_점포당_매출` END), 0) AS Q7,
+        COALESCE(MAX(CASE WHEN `기준_년분기_코드` = '20254' THEN `월_점포당_매출` END), 0) AS Q8
     FROM Q2_quarter
     GROUP BY `상권_코드`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`
 ),
 Q2_metrics AS (
     SELECT *,
-        ((Q1_Rev + Q2_Rev + Q3_Rev + Q4_Rev) / 4.0) AS `전반기_평균`,
-        ((Q5_Rev + Q6_Rev + Q7_Rev + Q8_Rev) / 4.0) AS `후반기_평균`,
-        (((Q5_Rev + Q6_Rev + Q7_Rev + Q8_Rev) / 4.0) / NULLIF(((Q1_Rev + Q2_Rev + Q3_Rev + Q4_Rev) / 4.0), 0)) - 1.0 AS `growth_rate`,
-        (IF(Q2_Rev > Q1_Rev, 1, 0) + IF(Q3_Rev > Q2_Rev, 1, 0) + IF(Q4_Rev > Q3_Rev, 1, 0) +
-         IF(Q5_Rev > Q4_Rev, 1, 0) + IF(Q6_Rev > Q5_Rev, 1, 0) + IF(Q7_Rev > Q6_Rev, 1, 0) +
-         IF(Q8_Rev > Q7_Rev, 1, 0)) AS `up_count`
-    FROM Q2_pivot
-    WHERE `영업_분기수` >= 4
+        (Q1+Q2+Q3+Q4)/4.0 AS `전반기_평균`,
+        (Q5+Q6+Q7+Q8)/4.0 AS `후반기_평균`,
+        ((Q5+Q6+Q7+Q8)/4.0) / NULLIF((Q1+Q2+Q3+Q4)/4.0, 0) - 1.0 AS `growth_rate`,
+        (IF(Q2>Q1,1,0)+IF(Q3>Q2,1,0)+IF(Q4>Q3,1,0)+IF(Q5>Q4,1,0)+
+         IF(Q6>Q5,1,0)+IF(Q7>Q6,1,0)+IF(Q8>Q7,1,0)) AS `up_count`
+    FROM Q2_pivot WHERE `영업_분기수` >= 4
 )
 SELECT
-    '라이징 핫플' AS `구분`, `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`,
+    `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`,
     ROUND(`평균_점포수`, 1)        AS `평균_점포수`,
-    ROUND(`전반기_평균` / 10000, 0) AS `24년_월점포당_만원`,
-    ROUND(`후반기_평균` / 10000, 0) AS `25년_월점포당_만원`,
-    ROUND(`growth_rate` * 100, 1)  AS `성장률_퍼센트`,
-    `up_count`                     AS `연속상승_횟수`
+    ROUND(`전반기_평균`/10000, 0)  AS `24년_월점포당_만원`,
+    ROUND(`후반기_평균`/10000, 0)  AS `25년_월점포당_만원`,
+    ROUND(`growth_rate`*100, 1)   AS `성장률_퍼센트`,
+    `up_count`                    AS `연속상승_횟수`
 FROM Q2_metrics
 WHERE `평균_점포수` >= 15 AND `평균_점포수` < 30
   AND `전반기_평균` >= 20000000 AND `전반기_평균` < 40000000
