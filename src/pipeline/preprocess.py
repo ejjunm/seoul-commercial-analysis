@@ -36,8 +36,9 @@ def standardize_headers(df):
 HDFS_BASE = "/user/maria_dev/seoul-commercial-analysis"
 HDFS_RAW  = f"{HDFS_BASE}/data/raw"
 HDFS_OUT  = f"{HDFS_BASE}/data/processed"
-TEMP_DIR  = "/tmp/seoul-commercial-analysis"
-TEMP_AREA = f"{TEMP_DIR}/area_with_coords.csv"
+TEMP_DIR       = "/tmp/seoul-commercial-analysis"
+TEMP_AREA      = f"{TEMP_DIR}/area_with_coords.csv"
+TEMP_AREA_SPARK = f"file://{TEMP_AREA}"
 
 TARGET_QUARTERS = [20241, 20242, 20243, 20244, 20251, 20252, 20253, 20254]
 TARGET_INDUSTRIES = [
@@ -113,7 +114,7 @@ for c in ["상권_구분_코드_명", "상권_코드_명", "자치구_코드_명
     pdf_area[c] = pdf_area[c].fillna("미상")
 pdf_area.to_csv(TEMP_AREA, index=False, encoding="utf-8")
 
-df_area = spark.read.csv(TEMP_AREA, header=True, encoding="utf-8") \
+df_area = spark.read.csv(TEMP_AREA_SPARK, header=True, encoding="utf-8") \
     .withColumn("경도", col("경도").cast("double")) \
     .withColumn("위도", col("위도").cast("double")) \
     .fillna("미상", subset=["상권_구분_코드_명", "상권_코드_명", "자치구_코드_명", "행정동_코드_명"])
