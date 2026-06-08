@@ -235,6 +235,9 @@ final_ranking = df_predict[[
     "상권_경쟁밀도", "청년안착_적합도", "진입가능성", "청년_라이징_추천점수"
 ]].sort_values("청년_라이징_추천점수", ascending=False)
 
+print("\n=== Q3 청년 라이징 추천 Top 15 (상권 × 업종) ===")      
+print(final_ranking.head(15).round(3).to_string(index=False)) 
+
 LOCAL_RESULT = f"{TMP_DIR}/seoul_q3_ml_result.parquet"
 final_ranking.to_parquet(LOCAL_RESULT, index=False)
 

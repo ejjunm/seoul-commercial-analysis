@@ -115,23 +115,40 @@ Q2_metrics AS (
     SELECT *,
         (Q1+Q2+Q3+Q4)/4.0 AS `전반기_평균`,
         (Q5+Q6+Q7+Q8)/4.0 AS `후반기_평균`,
+        (Q5+Q6+Q7+Q8)/4.0 - (Q1+Q2+Q3+Q4)/4.0 AS `abs_growth`,
         ((Q5+Q6+Q7+Q8)/4.0) / NULLIF((Q1+Q2+Q3+Q4)/4.0, 0) - 1.0 AS `growth_rate`,
         (IF(Q2>Q1,1,0)+IF(Q3>Q2,1,0)+IF(Q4>Q3,1,0)+IF(Q5>Q4,1,0)+
          IF(Q6>Q5,1,0)+IF(Q7>Q6,1,0)+IF(Q8>Q7,1,0)) AS `up_count`
     FROM Q2_pivot WHERE `영업_분기수` >= 4
-)
+),
+Q2_mega AS (
+    SELECT * FROM Q2_metrics
+    WHERE `평균_점포수` >= 30 AND `전반기_평균` >= 40000000 AND `growth_rate` > 0
+),
+Q2_mega_norm AS (
+    SELECT *,
+        MIN(`abs_growth`)  OVER (PARTITION BY `서비스_업종_코드_명`) AS `min_vol`,
+        MAX(`abs_growth`)  OVER (PARTITION BY `서비스_업종_코드_명`) AS `max_vol`,
+        MIN(`growth_rate`) OVER (PARTITION BY `서비스_업종_코드_명`) AS `min_spd`,
+        MAX(`growth_rate`) OVER (PARTITION BY `서비스_업종_코드_명`) AS `max_spd`
+    FROM Q2_mega
+),
 SELECT
     `상권_코드_명`, `자치구_코드_명`, `서비스_업종_코드_명`,
-    ROUND(`평균_점포수`, 1)        AS `평균_점포수`,
-    ROUND(`전반기_평균`/10000, 0)  AS `24년_월점포당_만원`,
-    ROUND(`후반기_평균`/10000, 0)  AS `25년_월점포당_만원`,
-    ROUND(`growth_rate`*100, 1)   AS `성장률_퍼센트`,
-    `up_count`                    AS `연속상승_횟수`
-FROM Q2_metrics
-WHERE `평균_점포수` >= 30
-  AND `전반기_평균` >= 40000000
-  AND `growth_rate` > 0
-ORDER BY `growth_rate` DESC
+    ROUND(`평균_점포수`, 1)       AS `평균_점포수`,
+    ROUND(`전반기_평균`/10000, 0) AS `24년_월점포당_만원`,
+    ROUND(`후반기_평균`/10000, 0) AS `25년_월점포당_만원`,
+    ROUND(`growth_rate`*100, 1)  AS `성장률_퍼센트`,
+    `up_count`                   AS `연속상승_횟수`,
+    ROUND(
+        (CASE WHEN `max_vol` != `min_vol`
+              THEN (`abs_growth`-`min_vol`)/(`max_vol`-`min_vol`)*100 ELSE 50.0 END) * 0.6
+      + (CASE WHEN `max_spd` != `min_spd`
+              THEN (`growth_rate`-`min_spd`)/(`max_spd`-`min_spd`)*100 ELSE 50.0 END) * 0.2
+      + (`up_count`/7.0*100) * 0.2
+    , 2) AS `메가_상승_총점`
+FROM Q2_mega_norm
+ORDER BY `메가_상승_총점` DESC
 LIMIT 10;
 
 -- Q2-2: 라이징 핫플
@@ -179,6 +196,6 @@ FROM Q2_metrics
 WHERE `평균_점포수` >= 15 AND `평균_점포수` < 30
   AND `전반기_평균` >= 20000000 AND `전반기_평균` < 40000000
   AND `growth_rate` >= 0.20
-  AND `up_count` >= 2
+  AND `up_count` >= 3
 ORDER BY `growth_rate` DESC
 LIMIT 10;
