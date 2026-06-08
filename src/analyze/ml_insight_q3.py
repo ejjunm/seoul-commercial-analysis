@@ -204,11 +204,11 @@ df_predict = df_cur_alley[
     (df_cur_alley["유동인구_하위_퍼센트"] >= 0.20) &
     (df_cur_alley["점포_수"] >= 3) &
     (df_cur_alley["상권_전체_점포수"] <= df_cur_alley["총점포수_상한선_최신"]) &
-    (df_cur_alley["점포당_매출_최신"] >= 1500000) &
+    (df_cur_alley["점포당_매출_최신"] >= 4500000) &
     (df_cur_alley["점포당_매출_최신"] <= df_cur_alley["매출_상한선_최신"]) &
     (df_cur_alley["상권_객단가"] >= df_cur_alley["객단가_하한선_최신"]) &
     (df_cur_alley["상권_객단가"] <= df_cur_alley["객단가_상한선_최신"]) &
-    (df_cur_alley["MZ_매출_비중"] >= 0.35)
+    (df_cur_alley["MZ_매출_비중"] >= 0.30)
 ].dropna(subset=features).copy()
 print(f"예측 대상: {len(df_predict)}건")
 
@@ -226,7 +226,7 @@ comp_n = minmax(df_predict["상권_경쟁밀도"])
 foot = df_predict["유동인구_하위_퍼센트"]
 foot_fit = 1 - (foot - 0.65).abs() / 0.65
 foot_fit = foot_fit.clip(lower=0)
-df_predict["진입가능성"] = (1 - comp_n) * 0.6 + foot_fit * 0.4
+df_predict["진입가능성"] = (1 - comp_n) * 0.7 + foot_fit * 0.3
 df_predict["청년_라이징_추천점수"] = df_predict["청년안착_적합도"] * df_predict["진입가능성"]
 
 final_ranking = df_predict[[
