@@ -1,3 +1,27 @@
+DROP TABLE IF EXISTS seoul_commercial_master;
+
+CREATE EXTERNAL TABLE seoul_commercial_master (
+    `기준_년분기_코드`    STRING,
+    `상권_코드`          STRING,
+    `서비스_업종_코드_명`  STRING,
+    `당월_매출_금액`      BIGINT,
+    `당월_매출_건수`      BIGINT,
+    `연령대_20_매출_금액`  BIGINT,
+    `연령대_30_매출_금액`  BIGINT,
+    `점포_수`            BIGINT,
+    `개업_점포_수`        BIGINT,
+    `폐업_점포_수`        BIGINT,
+    `총_유동인구_수`      BIGINT,
+    `상권_구분_코드_명`    STRING,
+    `상권_코드_명`        STRING,
+    `자치구_코드_명`      STRING,
+    `행정동_코드_명`      STRING,
+    `경도`              DOUBLE,
+    `위도`              DOUBLE
+)
+STORED AS PARQUET
+LOCATION '/user/maria_dev/seoul-commercial-analysis/data/processed/master_dataset';
+
 WITH Q1_1_base AS (
     SELECT
         `자치구_코드_명`, `상권_코드`, `기준_년분기_코드`,

@@ -48,7 +48,6 @@ TARGET_INDUSTRIES = [
 
 spark = SparkSession.builder \
     .appName("seoul_commercial_preprocess") \
-    .enableHiveSupport() \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel("ERROR")
@@ -128,14 +127,8 @@ df_master = df_sales \
         (~col("상권_코드_명").rlike("지하|백화점|마트|역사|터미널|코엑스"))
     )
 
-df_master = df_master.cache()
-
 df_master.coalesce(1).write \
     .mode("overwrite") \
     .parquet(f"{HDFS_OUT}/master_dataset")
-
-df_master.write \
-    .mode("overwrite") \
-    .saveAsTable("seoul_commercial_master")
 
 spark.stop()

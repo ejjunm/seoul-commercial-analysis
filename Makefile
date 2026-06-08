@@ -36,9 +36,7 @@ ml:
 
 analyze:
 	@echo "=== [6/6] Running Q1/Q2 Analysis with Hive ==="
-	beeline -u "jdbc:hive2://localhost:10000/default" -n maria_dev \
-		--hiveconf mapreduce.job.queuename=default \
-		-f $(ANALYZE)/analyze_insight.hql
+	JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8" hive -f $(ANALYZE)/analyze_insight.hql
 
 dashboard:
 	@echo "=== Building Dashboard CSVs ==="
@@ -54,7 +52,7 @@ sample:
 	cd $(INGEST) && $(PYTHON) make_sample.py
 
 hdfs-ls:
-	@echo "=== raw ==="       && hdfs dfs -ls $(HDFS)/data/raw       2>/dev/null || echo "(없음)"
+	@echo "=== raw ===" && hdfs dfs -ls $(HDFS)/data/raw       2>/dev/null || echo "(없음)"
 	@echo "=== processed ===" && hdfs dfs -ls $(HDFS)/data/processed 2>/dev/null || echo "(없음)"
 
 clean:
