@@ -35,8 +35,8 @@ ml:
 	$(SPARK) $(ANALYZE)/ml_insight_q3.py
 
 analyze:
-	@echo "=== [6/6] Running Q1/Q2 Analysis with Spark SQL ==="
-	$(SPARK) $(ANALYZE)/run_analysis.py
+	@echo "=== [6/6] Running Q1/Q2 Analysis with Hive ==="
+	HADOOP_OPTS="-Dfile.encoding=UTF-8" hive -f $(ANALYZE)/analyze_insight.hql
 
 dashboard:
 	@echo "=== Building Dashboard CSVs ==="
