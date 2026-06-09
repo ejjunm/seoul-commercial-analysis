@@ -8,7 +8,7 @@ PIPELINE := src/pipeline
 ANALYZE  := src/analyze
 HDFS     := /user/maria_dev/seoul-commercial-analysis
 
-.PHONY: all setup ingest preprocess analyze ml dashboard dashboard-html pipeline sample hdfs-ls clean
+.PHONY: all setup ingest preprocess analyze ml dashboard dashboard-html dashboard-app pipeline sample hdfs-ls clean
 
 all: setup pipeline ml analyze dashboard
 
@@ -47,6 +47,12 @@ dashboard-html:
 	$(PYTHON) $(ANALYZE)/build_dashboard_html.py
 	@echo "=== Serving dashboard at http://<VM_IP>:8888/dashboard.html ==="
 	cd data/processed/dashboard && $(PYTHON) -m http.server 8888
+
+dashboard-app:
+	@echo "=== Running Streamlit interactive dashboard ==="
+	@echo "=== Open at http://<VM_IP>:8501 ==="
+	$(PYTHON) -m streamlit run $(ANALYZE)/app.py \
+		--server.port 8501 --server.address 0.0.0.0 --server.headless true
 
 sample:
 	cd $(INGEST) && $(PYTHON) make_sample.py
