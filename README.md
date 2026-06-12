@@ -120,12 +120,13 @@ make dashboard-html
 ```
 > **Live Preview:** 별도의 환경 세팅 없이, 위 링크를 통해 정적 대시보드 결과물을 즉시 확인 가능.
 
+
 #### (B) Streamlit 인터랙티브 — 임시 공개 주소로 접속
 
-`app.py`는 WebSocket으로 실시간 통신을 유지. 외부망에서 방화벽 이슈 없이 접속하기 위해 Cloudflare 터널을 활용. (PuTTY 창 2개 필요)
+`app.py`는 WebSocket으로 실시간 통신을 유지. 외부망에서 방화벽 이슈 없이 접속하기 위해 터널링 도구를 활용. (PuTTY 등 SSH 창 2개 필요)
 발급된 공개 URL을 직접 입력하거나 QR 코드로 변환하여 스캔하면, 스마트폰 등 모바일 기기에서도 즉시 접속 및 인터랙티브 탐색이 가능.
 
-**창 A — 앱 실행**
+**창 A — 앱 실행 (공통)**
 
 ```bash
 pkill -f streamlit   # 이전 프로세스 정리
@@ -159,17 +160,6 @@ lt --port 8501
 ```
 실행 후 출력되는 `https://XXXX.loca.lt` 주소를 브라우저에 입력. (접속 시 보안 안내 창이 뜨면 'Click to Continue' 버튼을 클릭하여 진입)
 
-**방법 2. Cloudflare 터널 사용**
-```bash
-cd ~
-./cloudflared tunnel --url http://127.0.0.1:8501
-```
-실행 후 출력되는 `https://XXXX.trycloudflare.com` 주소를 브라우저에 입력.
-
-> `cloudflared` 실행 파일이 없으면 다운 필수
-> ```bash
-> cd ~ && wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared && chmod +x cloudflared
-> ```
 
 ### 5.3 단계별 실행
 
