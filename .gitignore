@@ -220,14 +220,9 @@ __marimo__/
 data/raw/
 *.zip
 
-data/sample/
-*.csv
-
 data/processed/
-data/geo/
-/tmp/seoul-commercial-analysis/
 
+/tmp/seoul-commercial-analysis/
 __pycache__/
 *.pyc
-
 *.png
