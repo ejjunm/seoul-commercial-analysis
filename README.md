@@ -115,14 +115,15 @@ make dashboard-html
 
 `build_dashboard_html.py`가 `dashboard.html`을 생성하고 `8888` 포트로 구동. 브라우저에서 아래 주소 접속 가능.
 
+```text
+[http://34.50.49.43:8888/dashboard.html](http://34.50.49.43:8888/dashboard.html)
 ```
-http://34.50.49.43:8888/dashboard.html
-```
->  별도의 환경 세팅 없이, **(http://34.50.49.43:8888/dashboard.html)**에서 정적 대시보드 결과물을 즉시 확인 가능
+> **Live Preview:** 별도의 환경 세팅 없이, 위 링크를 통해 정적 대시보드 결과물을 즉시 확인 가능.
 
 #### (B) Streamlit 인터랙티브 — 임시 공개 주소로 접속
 
 `app.py`는 WebSocket으로 실시간 통신을 유지. 외부망에서 방화벽 이슈 없이 접속하기 위해 Cloudflare 터널을 활용. (PuTTY 창 2개 필요)
+발급된 공개 URL을 직접 입력하거나 QR 코드로 변환하여 스캔하면, 스마트폰 등 모바일 기기에서도 즉시 접속 및 인터랙티브 탐색이 가능.
 
 **창 A — 앱 실행**
 
@@ -134,14 +135,36 @@ pkill -f streamlit   # 이전 프로세스 정리
 
 `URL: http://127.0.0.1:8501` 이 출력되면 정상 실행. 창을 닫지 말고 다음 단계로 진입.
 
-**창 B — 공개 터널** 
+**창 B — 공개 터널 구동 (상황에 따라 택 1)** 
 
+**방법 1. Cloudflare 터널 사용**
 ```bash
 cd ~
 ./cloudflared tunnel --url http://127.0.0.1:8501
 ```
+실행 후 출력되는 `https://XXXX.trycloudflare.com` 주소를 브라우저에 입력.
 
-실행 후 출력되는 `https://XXXX.trycloudflare.com` 주소를 브라우저에 입력
+> `cloudflared` 실행 파일이 없으면 다운 필수
+> ```bash
+> cd ~ && wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared && chmod +x cloudflared
+> ```
+
+**방법 2. localtunnel 사용**
+```bash
+# 최초 1회 설치
+npm install -g localtunnel
+
+# 8501 포트 터널 개방
+lt --port 8501
+```
+실행 후 출력되는 `https://XXXX.loca.lt` 주소를 브라우저에 입력. (접속 시 보안 안내 창이 뜨면 'Click to Continue' 버튼을 클릭하여 진입)
+
+**방법 2. Cloudflare 터널 사용**
+```bash
+cd ~
+./cloudflared tunnel --url http://127.0.0.1:8501
+```
+실행 후 출력되는 `https://XXXX.trycloudflare.com` 주소를 브라우저에 입력.
 
 > `cloudflared` 실행 파일이 없으면 다운 필수
 > ```bash
