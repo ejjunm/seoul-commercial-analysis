@@ -118,6 +118,8 @@ make dashboard-html
 http://34.50.49.43:8888/dashboard.html
 ```
 
+> 별도의 환경 세팅 없이, 현재 구동 중인 VM 서버를 통해 **(http://34.50.49.43:8888/dashboard.html)**에서 정적 대시보드 결과물을 즉시 확인 가능
+
 #### (B) Streamlit 인터랙티브 — 임시 공개 주소로 접속
 
 `app.py`는 WebSocket으로 실시간 통신을 유지. 외부망에서 방화벽 이슈 없이 접속하기 위해 Cloudflare 터널을 활용. (PuTTY 창 2개 필요)
