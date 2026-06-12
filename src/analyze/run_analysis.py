@@ -21,7 +21,7 @@ try:
     df_ml.createOrReplaceTempView("seoul_q3_ml_result")
 
 except Exception as e:
-    print("파케이 데이터 로드 실패. preprocess.py와 ml_insight_q3.py가 완료됐는지 확인하세요.", flush=True)
+    print("실패", flush=True)
     traceback.print_exc()
     spark.stop()
     sys.exit(1)

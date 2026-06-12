@@ -271,7 +271,7 @@ html = f"""<!DOCTYPE html>
 <div class="tab-content active" id="tab0">
   <div class="cards">{tab1_cards}</div>
   <div class="section"><h3>자치구별 상권 지형 — 규모 vs 실속</h3>{fig_div(fig_map)}
-    <div class="note">📌 버튼으로 규모(총매출)와 실속(점포당매출)을 전환하세요. 규모 1위 강남이 실속에서는 순위가 내려갑니다.</div></div>
+    <div class="note">📌 버튼으로 규모(총매출)와 실속(점포당매출)을 전환. 규모 1위 강남이 실속에서는 순위가 변동.</div></div>
   <div class="section"><h3>자치구별 랭킹 비교 (전체 25개 구)</h3>{fig_div(fig_bar)}</div>
   <div class="section"><h3>자치구별 랜드마크 업종 — 종합 특화도 LQ</h3>{fig_div(fig_lq)}</div>
 </div>
@@ -289,8 +289,8 @@ html = f"""<!DOCTYPE html>
 
 <div class="tab-content" id="tab2">
   <div class="cards">{tab3_cards}</div>
-  <div class="section"><h3>2030 청년 라이징 상권 지도 (AI 추천)</h3>
-    <div class="note">🟢 색 = AI 안착 적합도 · 원 크기 = 진입 가능성 · 버튼으로 적합도 하한 조절(슬라이더 대체)</div>
+  <div class="section"><h3>2030 청년 라이징 상권 지도</h3>
+    <div class="note">🟢 색 = AI 안착 적합도 · 원 크기 = 진입 가능성 · 버튼으로 적합도 하한 조절</div>
     {fig_div(fig_yo)}</div>
   <div class="two-col">
     <div class="section"><h3>XGBoost SHAP 변수 중요도</h3>{fig_div(fig_shap)}
